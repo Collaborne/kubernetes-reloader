@@ -1,0 +1,14 @@
+/node_modules/
+/build/
+npm-debug.log
+
+npm-shrinkwrap.json
+package-lock.json
+yarn.lock
+
+*.orig
+*.rej
+*.porig
+
+/.nyc_output/
+/.vscode/
