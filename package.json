@@ -1,0 +1,69 @@
+{
+  "name": "@collaborne/kubernetes-reloader",
+  "version": "0.0.1",
+  "description": "Reloader for Kubernetes",
+  "main": "build/index.js",
+  "dependencies": {
+    "@types/express": "^4.17.1",
+    "@types/node": "^12.11.1",
+    "@types/yargs": "^13.0.3",
+    "auto-kubernetes-client": "^0.6.1",
+    "caller-module": "^1.0.4",
+    "express": "^4.17.1",
+    "express-prom-bundle": "^5.1.5",
+    "log4js": "^5.2.2",
+    "prom-client": "^11.5.3",
+    "source-map-support": "^0.5.13",
+    "yargs": "^14.2.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
+    "nyc": "^14.1.1",
+    "ts-node": "^8.4.1",
+    "tsconfig-collaborne": "^1.2.0",
+    "tslint": "^5.20.0",
+    "tslint-config-collaborne": "^1.0.0",
+    "typescript": "^3.6.4"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tslint -c tslint.json -p . && npm run lint:test",
+    "lint:test": "tslint -c tslint.json \"test/**/*.ts\"",
+    "test": "TS_NODE_CACHE=false TS_NODE_FILES=true node ${_NODE_ARGS} $(npm bin)/nyc mocha --recursive --require ts-node/register --require source-map-support/register \\\"test/**/*.spec.ts\\\"",
+    "start": "node -r source-map-support/register ${_NODE_ARGS} build/server.js",
+    "start-dev": "TS_NODE_FILES=true node -r ts-node/register ${_NODE_ARGS} src/server.ts",
+    "start-dev:eks": "npm run start-dev -- --token=$(aws-iam-authenticator token --cluster-id eks-20190111 --token-only)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Collaborne/kubernetes-reloader.git"
+  },
+  "keywords": [
+    "kubernetes",
+    "reloader",
+    "configmap",
+    "secret",
+    "deployment"
+  ],
+  "author": "Andreas Kohn <andreas.kohn@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Collaborne/kubernetes-reloader/issues"
+  },
+  "homepage": "https://github.com/Collaborne/kubernetes-reloader#readme",
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "build/",
+      "test/"
+    ],
+    "all": true
+  }
+}
