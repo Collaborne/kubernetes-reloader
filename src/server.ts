@@ -37,18 +37,17 @@ const argv = yargs
 	.describe('configmap', 'The configmap under which to store known content hashes').string('configmap').demandOption('configmap')
 	.describe('ignored-config-resource-types', 'Configuration resource types to ignore').array('ignored-config-resource-types').default('ignored-config-resource-types', [])
 	.describe('coalesce-period', 'Period in milliseconds for which to wait for additional changes before updating a target resource').number('coalesce-period').default('coalesce-period', 5000).demandOption('coalesce-period')
+	.describe('alternative-configmap-annotation', 'Additional annotation to accept for listing referenced ConfigMap resources in a target resource').string('alternative-configmap-annotation')
+	.describe('alternative-secret-annotation', 'Additional annotation to accept for listing referenced Secret resources in a target resource').string('alternative-secret-annotation')
 	.help()
 	.argv;
 
 const CONFIGMAP_RELOADER_ANNOTATION = 'reloader.k8s.collaborne.com/configmap';
 const SECRET_RELOADER_ANNOTATION = 'reloader.k8s.collaborne.com/secret';
 
-const CONFIGMAP_LEGACY_RELOADER_ANNOTATION = 'configmap.reloader.stakater.com/reload';
-const SECRET_LEGACY_RELOADER_ANNOTATION = 'secret.reloader.stakater.com/reload';
-
 const configResourceTypesToAnnotations: {[resourceType: string]: string[]} = {
-	'v1.ConfigMap': [CONFIGMAP_RELOADER_ANNOTATION, CONFIGMAP_LEGACY_RELOADER_ANNOTATION],
-	'v1.Secret': [SECRET_RELOADER_ANNOTATION, SECRET_LEGACY_RELOADER_ANNOTATION],
+	'v1.ConfigMap': [CONFIGMAP_RELOADER_ANNOTATION],
+	'v1.Secret': [SECRET_RELOADER_ANNOTATION],
 };
 const targetResourceTypes = [
 	'apps/v1.Deployment',
@@ -63,6 +62,13 @@ function isMonitoredConfigResource(resourceType: string) {
 
 	const ignoredConfigResourceTypes = argv['ignored-config-resource-types'] as string[];
 	return (!ignoredConfigResourceTypes.includes(resourceType));
+}
+
+if (argv['alternative-configmap-annotation']) {
+	configResourceTypesToAnnotations['v1.ConfigMap'].push(argv['alternative-configmap-annotation']);
+}
+if (argv['alternative-secret-annotation']) {
+	configResourceTypesToAnnotations['v1.Secret'].push(argv['alternative-secret-annotation']);
 }
 
 const app = express();
