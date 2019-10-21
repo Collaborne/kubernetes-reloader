@@ -34,7 +34,7 @@ type K8sArgs = K8sServerArgs & (K8sTokenAuthArgs | K8sUserPasswordAuthArgs | K8s
 
 function createK8sConfigWithServer(args: K8sArgs) {
 	const k8sConfig: {[key: string]: any} = {
-		insecureSkipTlsVerify: args.insecureSkipTlsVerify,
+		rejectUnauthorized: !Boolean(args.insecureSkipTlsVerify),
 		url: args.server,
 	};
 	if (args.certificateAuthority) {

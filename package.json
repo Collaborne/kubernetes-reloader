@@ -12,6 +12,7 @@
     "express": "^4.17.1",
     "express-prom-bundle": "^5.1.5",
     "log4js": "^5.2.2",
+    "prom-client": "^11.5.3",
     "source-map-support": "^0.5.13",
     "yargs": "^14.2.0"
   },
@@ -33,7 +34,9 @@
     "build:extras": "cp log4js.json build/",
     "lint": "tslint -c tslint.json -p . && npm run lint:test",
     "lint:test": "tslint -c tslint.json \"test/**/*.ts\"",
-    "test": "TS_NODE_CACHE=false TS_NODE_FILES=true node ${_NODE_ARGS} $(npm bin)/nyc mocha --recursive --require ts-node/register --require source-map-support/register \\\"test/**/*.spec.ts\\\""
+    "test": "TS_NODE_CACHE=false TS_NODE_FILES=true node ${_NODE_ARGS} $(npm bin)/nyc mocha --recursive --require ts-node/register --require source-map-support/register \\\"test/**/*.spec.ts\\\"",
+    "start": "node -r source-map-support/register ${_NODE_ARGS} build/index.js",
+    "start-dev": "TS_NODE_FILES=true node -r ts-node/register ${_NODE_ARGS} src/index.ts"
   },
   "repository": {
     "type": "git",

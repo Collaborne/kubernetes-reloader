@@ -1,41 +1,42 @@
+import { ResourceClient } from './index';
 import { getModuleLogger } from './logger';
 
 const logger = getModuleLogger();
 
-interface WatchItem {
-	type: 'ADDED'|'MODIFIED'|'DELETED'|'ERROR';
-	object: any;
-}
+type UpdateCallback<Payload extends {} = {}> = (type: string, oldResource: K8sResource<Payload>|undefined, newResource: K8sResource<Payload>|undefined) => any;
 
-export async function resourceLoop(type: string, resourceK8sClient: /* XXX */ any) {
-	const list = await resourceK8sClient.list();
+export async function resourceLoop<Payload extends {} = {}>(type: string, resourceClient: ResourceClient<Payload>, onUpdate: UpdateCallback<Payload>) {
+	const list = await resourceClient.list();
 	const resourceVersion = list.metadata.resourceVersion;
 
-	// Treat all resources we see as "update", which will trigger a creation/update of attributes accordingly.
-	for (const resource of list.items) {
+	// Map the resources by name, so we can easily look them up. We expose the changes as "update" to our client.
+	const resourcesByName = list.items.reduce((agg, resource) => {
 		const name = resource.metadata.name;
+		agg[name] = Object.assign({ apiVersion: resourceClient.apiVersion, kind: resourceClient.kind }, resource);
+		return agg;
+	}, {} as {[name: string]: K8sResource<Payload>});
 
-		// TODO: Do something now
-	}
+	// XXX: Should we also report the adds?
 
 	// Start watching the resources from that version on
 	logger.info(`Watching ${type} at ${resourceVersion}...`);
-	resourceK8sClient.watch(resourceVersion)
+	resourceClient.watch(resourceVersion)
 		.on('data', (item: WatchItem) => {
 			const resource = item.object;
 			const name = resource.metadata.name;
 
-			let next;
-
 			switch (item.type) {
 			case 'ADDED':
-				logger.info(`[${name}]: Creating resource`);
+				logger.info(`[${resourceClient.apiVersion}.${resourceClient.kind}:${name}]: Created resource`);
+				onUpdate(type, undefined, resource);
 				break;
 			case 'MODIFIED':
-				logger.info(`[${name}]: Updating resource attributes`);
+				logger.info(`[${resourceClient.apiVersion}.${resourceClient.kind}:${name}]: Updating resource attributes: ${JSON.stringify(resourcesByName[name])} -> ${JSON.stringify(resource)}`);
+				onUpdate(type, resourcesByName[name], resource);
 				break;
 			case 'DELETED':
-				logger.info(`[${name}]: Deleting resource`);
+				logger.info(`[${resourceClient.apiVersion}.${resourceClient.kind}:${name}]: Deleting resource`);
+				onUpdate(type, resourcesByName[name], undefined);
 				break;
 			case 'ERROR':
 				// Log the message, and continue: usually the stream would end now, but there might be more events
@@ -43,13 +44,14 @@ export async function resourceLoop(type: string, resourceK8sClient: /* XXX */ an
 				logger.warn(`Error while watching: ${item.object.message}, ignoring`);
 				return;
 			default:
-				logger.warn(`Unkown watch event type ${item.type}, ignoring`);
+				logger.warn(`Unknown watch event type ${item.type}, ignoring`);
 				return;
 			}
+			resourcesByName[name] = resource;
 		})
 		.on('end', () => {
 			// Restart the watch from the last known version.
 			logger.info(`Watch of ${type} ended, restarting`);
-			resourceLoop(type, resourceK8sClient);
+			resourceLoop(type, resourceClient, onUpdate);
 		});
 }
