@@ -1,6 +1,6 @@
 {
   "name": "@collaborne/kubernetes-reloader",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Reloader for Kubernetes",
   "main": "build/index.js",
   "dependencies": {
