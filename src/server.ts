@@ -36,6 +36,7 @@ const argv = yargs
 	.number('port').default('port', process.env.PORT || 8080)
 	.describe('configmap', 'The configmap under which to store known content hashes').string('configmap').demandOption('configmap')
 	.describe('ignored-config-resource-types', 'Configuration resource types to ignore').array('ignored-config-resource-types').default('ignored-config-resource-types', [])
+	.describe('coalesce-period', 'Period in milliseconds for which to wait for additional changes before updating a target resource').number('coalesce-period').default('coalesce-period', 5000).demandOption('coalesce-period')
 	.help()
 	.argv;
 
@@ -86,7 +87,7 @@ const listener = server.listen(argv.port, async () => {
 		const targetResourceClients = targetResourceTypes
 			.map(targetResourceType => createResourceClient<BaseDeploymentPayload>(k8sClient, targetResourceType, argv.namespace as string))
 			.map(createCachedResourceClient);
-		const handleUpdate = createHandleUpdate(configResourceTypesToAnnotations, hashStore, targetResourceClients);
+		const handleUpdate = createHandleUpdate(configResourceTypesToAnnotations, hashStore, targetResourceClients, argv['coalesce-period']);
 
 		// Start a monitoring loop for each of the allowed resources
 		Object.keys(configResourceTypesToAnnotations)

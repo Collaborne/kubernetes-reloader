@@ -152,7 +152,7 @@ async function executeResourceUpdate(resourceClient: ResourceClient<BaseDeployme
 	}
 }
 
-export function createHandleUpdate(configResourceTypesToAnnotations: {[resourceType: string]: string[]}, hashStore: HashStore, targetResourceClients: Array<ResourceClient<BaseDeploymentPayload>>) {
+export function createHandleUpdate(configResourceTypesToAnnotations: {[resourceType: string]: string[]}, hashStore: HashStore, targetResourceClients: Array<ResourceClient<BaseDeploymentPayload>>, coalescePeriod: number) {
 	// type:name -> timeout reference when that will be updated.
 	const pendingUpdates: {[resourceTypeColonName: string]: PendingUpdate} = {};
 
@@ -200,7 +200,7 @@ export function createHandleUpdate(configResourceTypesToAnnotations: {[resourceT
 						timeout: setTimeout(() => {
 							executeResourceUpdate(targetResourceClient, targetResource, pendingUpdate.updatedResources);
 							delete pendingUpdates[resourceTypeColonName];
-						}, 5000),
+						}, coalescePeriod),
 						updatedResources: [
 							...(pendingUpdate ? pendingUpdate.updatedResources : []),
 							updatedResource,
