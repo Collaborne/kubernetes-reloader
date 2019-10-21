@@ -1,0 +1,35 @@
+dist: trusty
+group: beta
+
+language: node_js
+node_js:
+- lts/dubnium
+services:
+- docker
+cache:
+  directories:
+  - node_modules
+before_install:
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then BASE_NAME=${TRAVIS_BRANCH}; else BASE_NAME=pr${TRAVIS_PULL_REQUEST}; fi
+- NAME=`echo ${BASE_NAME} | tr -cd '[\-._[:alnum:]]'`
+- TS=`date +%Y%m%dT%H%M%S`
+- VERSION_TAG=${NAME}-${TS}-${TRAVIS_COMMIT}
+- TAGS="${NAME} ${VERSION_TAG}"
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then TAGS="${TAGS} latest"; fi
+
+- docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+
+- "if [ -d node_modules ] && [ x$(cat node_modules/.last-node-version 2>/dev/null) != x$(node -e 'console.log(process.version)') ]; then npm rebuild --update-binary && node -e 'console.log(process.version)' > node_modules/.last-node-version; fi"
+after_success:
+- docker build `echo ${TAGS} | sed -re "s,\b([-._[:alnum:]]+)\b,-t ${DOCKER_NAME}:\1,g"` .
+deploy:
+  provider: script
+  script: "${SHELL} ./travis-deploy.sh ${DOCKER_NAME} ${TAGS}"
+  on:
+    all_branches: true
+env:
+  global:
+    - DOCKER_NAME=collaborne/kubernetes-reloader
+    - secure: "VE6Fiyaz2/6utsJswp+xhcNovSQungrFSi3l81POuNjWbljNqYRf6fdBSo7Hg+2+pXnCxJVZwmRo2hkyRcPrJecaWwAlSPskC5bYWs72qK4SS5spGHmfS0VP3E/QW93RxIZAiukU0OiIqznA3Hc58CUzPPmGsDVxdHLi3MLpSEKCnllsakfw4kMfnQHPYqPvp/fbW61qwsDnaHwOUZYZwi7UDFq2czlDv9HXXK1I3QE1YIJoS2181omVHMzwN/DeAPHAoALwdF4F9jW3P1RApAXLkMqp2W/3h5PEhSZ5NkwgLQAi3TcYpClVwq/+ngJOLfpldk4wwM2KPJio3Z6JTCJbCXe+5554ZjilAlCbD7XIcVl1QZIL85VeZhXxbEle4oMowujp/3Yt7ozPdqRZBJ+sR70a6tAZK+Li9HUCPtJ/1l6Rux4AJ3gXgS1gQ7SSIPQvMNrROlAgSscBkp3WZXXBW75ZNdM2xqCK+Tly845/3nVEqHJnIvG1K1TogRjh393hhFYRH+7m+Ok8J4yAlA1Rr3G3pgHkCUEae1Fb8dUtHeTExR/2DQvGlsGYYZXI1EE41gfkM7hLDU5bxbw3nLPVjqga5tuvQ+RExojIOkXKRYpeft9K6+eOLshxZwv/qe0vvSKpn96eGYHJyjZ1wyNba7oVhCsVJo/qz71lIIE="
+    - secure: "bDeciR/B/X6HnXp24w7vLnRAcJxZFXtM1qe8UPo3L6+2clihFS6XiFhB7cUAnOe4FNH7z465XXg19QFITalKpqU8MFZbmgVwT7A5rgolbKkwNDaJdkc9nV4kRx1IqIfC+0gM/mO1At7teO28nPy2JpZ7Ia0G93byox37n7yafXD6xC7kpNUCrPzBeNthMsjUdZ8t3QyvLL/FZP2bMBH0UCNAm7XATtjcJgy2Iq6WwoZv0Fhah+U56mCmchHbOfY5zk1GFfZ5pChz0icf+txErc4rrsG/vM10T1AOOA2L3GBJUpDxApbLLUFgIZdeGF1iJ4YhXt08HGV8xagrn8u7eHaYcZg0jfcghc85jeEb7IInS9tDmOOBiksYHeb0mKq8mI05GxvjB3boPAwL12U7EsCvzVqoheOuUIwDHKpVGhj0g42mMe7+1UDz6dv/qZhgkzxpouDPUlPY3LNsMgIyv5rqX3Syesh5G+cGoJI9KbHDMKBEyOx4EjpkLcICxj+ISHtTKCj+ZlMmHpsR0YQJx8l0kMC3DgxYTh4K7WnepAkIMDeIt4mU0l9xYxkkSrM8RZmVzl949o6rHt8Q/dxknhleFOnYl8e/PxMN2uQFu9g1zZiVaWbyWT11lxvQiMr/NhrCUHX6jtxhKGG9czKUXeCla1lBDkCNlzvul4ybO6U="
+
