@@ -1,4 +1,4 @@
-# kubernetes-reloader
+# kubernetes-reloader [![Build Status](https://travis-ci.com/Collaborne/kubernetes-reloader.svg?branch=master)](https://travis-ci.com/Collaborne/kubernetes-reloader)
 
 A tool similar to <https://github.com/fabric8io/configmapcontroller> and <https://github.com/stakater/Reloader>, with some improved behaviors specifically for our deployment approach using <https://github.com/Collaborne/kubernetes-bootstrap>.
 
