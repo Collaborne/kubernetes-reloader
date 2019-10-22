@@ -1,8 +1,12 @@
 # kubernetes-reloader
 
-A tool similar to <https://github.com/fabric8io/configmapcontroller> and <https://github.com/stakater/Reloader>.
+A tool similar to <https://github.com/fabric8io/configmapcontroller> and <https://github.com/stakater/Reloader>, with some improved behaviors specifically for our deployment approach using <https://github.com/Collaborne/kubernetes-bootstrap>.
 
-In contrast to these tools this reloader keeps information _outside_ of the deployment, so that it can handle updates that replace the environment variables.
+The main differences:
+
+* State for all monitored configmaps and secrets is kept in a dedicated configmap _outside_ of the deployment, so that it can handle updates that replace the environment variables slightly better, and will not trigger a forced rebuild just because the environment variable is missing. A replacement of a deployment that was once reloaded would still trigger another reload though because the environment variable was removed.
+* Coalesces multiple reloads that become needed due to multiple updates of configmaps and secrets
+* Less network and memory use due to caching of the target deployments, daemonsets, and statefulsets
 
 ## Approach
 
