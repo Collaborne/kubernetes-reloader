@@ -7,6 +7,7 @@ The main differences:
 * State for all monitored configmaps and secrets is kept in a dedicated configmap _outside_ of the deployment, so that it can handle updates that replace the environment variables slightly better, and will not trigger a forced rebuild just because the environment variable is missing. A replacement of a deployment that was once reloaded would still trigger another reload though because the environment variable was removed.
 * Coalesces multiple reloads that become needed due to multiple updates of configmaps and secrets
 * Less network and memory use due to caching of the target deployments, daemonsets, and statefulsets
+* Prometheus metrics exposed at `:8080/metrics`
 
 ## Approach
 
